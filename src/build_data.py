@@ -6,6 +6,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
+from scipy import misc
 import pickle
 
 
@@ -39,6 +40,7 @@ def build_data(data, dataset_size, length):
             else:
                 image = np.append(image, img_tmp, axis=1)
                 label = np.vstack([label, data.labels[s_indices[j]]])
+        image = misc.imresize(image, (64, 64))
         images.append(image)
         labels.append(label)
     return {"images": images, "labels": labels}
@@ -56,16 +58,16 @@ if __name__ == '__main__':
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
     print("Creating training dataset")
-    train_dataset = build_data(mnist.train, 130000, 5)
+    train_dataset = build_data(mnist.train, 150000, 5)
     pickle.dump(train_dataset, open("train.p", "wb"))
     print("Creating validation dataset")
-    validation_dataset = build_data(mnist.validation, 15000, 5)
+    validation_dataset = build_data(mnist.validation, 30000, 5)
     pickle.dump(validation_dataset, open("validation.p", "wb"))
     print("Creating testing dataset")
-    test_dataset = build_data(mnist.test, 30000, 5)
+    test_dataset = build_data(mnist.test, 50000, 5)
     pickle.dump(test_dataset, open("test.p", "wb"))
     print("Done")
 
-    # load_data("train.p", True)
-    # load_data("validation.p", True)
-    # load_data("test.p", True)
+    load_data("train.p", True)
+    load_data("validation.p", True)
+    load_data("test.p", True)

@@ -38,27 +38,28 @@ class cnn_sequence:
 
     def build_layers(self, input_images, keep_prob):
         with tf.name_scope("layers"):
-            x = tf.reshape(input_images, [-1, 28, 140, 1])
-            conv_1 = self.conv2d(x, [5, 5, 1, 32])
+            x = tf.reshape(input_images, [-1, 64, 64, 1])
+            conv_1 = self.conv2d(x, [5, 5, 1, 16])
             relu_1 = self.relu(conv_1)
             max_pool_1 = self.max_pooling2x2(relu_1)
 
-            conv_2 = self.conv2d(max_pool_1, [3, 3, 32, 16])
+            conv_2 = self.conv2d(max_pool_1, [5, 5, 16, 32])
             relu_2 = self.relu(conv_2)
             max_pool_2 = self.max_pooling2x2(relu_2)
 
-            conv_3 = self.conv2d(max_pool_2, [2, 2, 16, 8])
+            conv_3 = self.conv2d(max_pool_2, [5, 5, 32, 64])
             relu_3 = self.relu(conv_3)
             max_pool_3 = self.max_pooling2x2(relu_3)
 
-            max_pool_3_flat = tf.reshape(max_pool_3, [-1, 4 * 18 * 8])
-            dense_1 = self.dense(max_pool_3_flat, 4 * 18 * 8, 128)
-            dense_2 = self.dense(dense_1, 128, 64)
-            dense_2_drop = self.dropout(dense_2, keep_prob)
-            logits = self.dense(dense_2_drop, 64, 50)
-            logits = tf.reshape(logits, [-1, 5, 10])
-
-            return logits
+            max_pool_3_flat = tf.reshape(max_pool_3, [-1, 8 * 8 * 64])
+            max_pool_3_flat_drop = tf.nn.dropout(max_pool_3_flat, keep_prob)
+            dense_1 = self.relu(self.dense(max_pool_3_flat_drop, 8 * 8 * 64, 1024))
+            dense_1_drop = tf.nn.dropout(dense_1, keep_prob)
+            logits = []
+            for i in range(5):
+                temp = self.dense(dense_1_drop, 1024, 10)
+                logits.append(temp)
+            return tf.stack(logits, axis=1)
 
     def loss(self, logits, input_labels):
         with tf.name_scope("loss"):
@@ -85,11 +86,12 @@ class cnn_sequence:
             sequence_corrects = tf.equal(sequence_corrects, 0, name="is_zero")
             sequence_corrects = tf.reduce_mean(tf.cast(sequence_corrects, tf.float32))
 
-            return individual_corrects, sequence_corrects, tf.shape(labels)[0]
+            return individual_corrects, sequence_corrects
 
 
-
-
+    def converter(self, input_labels):
+        with tf.name_scope("convert"):
+            return tf.argmax(input_labels, 2)
 
 
 
